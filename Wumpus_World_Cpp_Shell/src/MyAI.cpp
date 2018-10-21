@@ -101,6 +101,7 @@ Agent::Action MyAI::getAction
     //update time after each action
 	t++;
 
+
     return current_action;
 	// ======================================================================
 	// YOUR CODE ENDS
