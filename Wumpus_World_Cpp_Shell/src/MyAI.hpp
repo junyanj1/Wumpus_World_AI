@@ -22,25 +22,73 @@
 
 #include "Agent.hpp"
 
-class MyAI : public Agent
+//include other libraries
+#include <vector>
+#include <iostream>
+#include <map>
+using namespace std;
+//
+
+typedef pair<int,int> Position;
+typedef vector<bool> Percept;
+
+
+struct Tile
 {
+	bool pit    = false;
+	bool wumpus = false;
+	bool gold   = false;
+
+	bool breeze = false;
+	bool stench = false;
+
+	bool visited = false;
+};
+
+
+class MyAI :
+		public Agent
+{
+
+
 public:
 	MyAI ( void );
-	
+
 	Action getAction
-	(
-		bool stench,
-		bool breeze,
-		bool glitter,
-		bool bump,
-		bool scream
-	);
-	
+			(
+					bool stench,
+					bool breeze,
+					bool glitter,
+					bool bump,
+					bool scream
+			);
+
 	// ======================================================================
 	// YOUR CODE BEGINS
 	// ======================================================================
-	
-	//haha
+
+
+	int time;
+
+	vector<Position> safe_pos;
+	vector<Position> unsafe_pos;
+	vector<Action> plan;
+
+
+	//knowledge base
+	vector<vector<Tile>> KB;
+
+
+	//update KB after getting percepts
+	void Tell(){}
+	//query KB for certain information
+	void Ask(){}
+	//generate an action sequence
+	void route_generator(Position current,Position goal, vector<Position> allowed_pos ){}
+
+private:
+	vector<int,int> current_location;
+	bool have_arrow;
 
 	// ======================================================================
 	// YOUR CODE ENDS
