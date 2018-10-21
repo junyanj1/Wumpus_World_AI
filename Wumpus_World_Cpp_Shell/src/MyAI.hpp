@@ -84,7 +84,7 @@ public:
 	//query KB for certain information
 	void Ask(){}
 	//generate an action sequence
-	void route_generator(Position current,Position goal, vector<Position> allowed_pos ){}
+	vector<Action> route_generator(Position current,Position goal, vector<Position> allowed_pos ){}
 
 private:
 	vector<int,int> current_location;
