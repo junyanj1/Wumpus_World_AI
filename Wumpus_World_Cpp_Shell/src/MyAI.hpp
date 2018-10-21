@@ -26,6 +26,7 @@
 #include <vector>
 #include <iostream>
 #include <map>
+#include <deque>
 using namespace std;
 //
 
@@ -67,28 +68,43 @@ public:
 	// YOUR CODE BEGINS
 	// ======================================================================
 
+	//time
+	int t;
 
-	int time;
+	vector<Position> safe;
+	vector<Position> unsafe;
+	vector<Position> visited;
+	static int current_X;
+	static int current_Y;
+	Action current_action;
 
-	vector<Position> safe_pos;
-	vector<Position> unsafe_pos;
-	vector<Action> plan;
+	//a sequence of actions
+	deque<Action> plan;
+
+	//store all allowed tiles for generating route
+	deque<Tile> allowed_tiles;
 
 
 	//knowledge base
-	vector<vector<Tile>> KB;
+	static  vector<vector<Tile>> KB;
 
 
-	//update KB after getting percepts
-	void Tell(){}
+	//Tell() update KB after getting percepts
+	void update_percept(bool stench,bool breeze);
+	void update_safe(pair<int,int> position);
+	void update_action(Action current_action, int t);
+
 	//query KB for certain information
 	void Ask(){}
 	//generate an action sequence
-	vector<Action> route_generator(Position current,Position goal, vector<Position> allowed_pos ){}
+	deque<Action> route_generator(Position current,Position goal, deque<Tile> allowed_pos ){}
 
 private:
-	vector<int,int> current_location;
+
 	bool have_arrow;
+	enum agent_dir{
+
+	};
 
 	// ======================================================================
 	// YOUR CODE ENDS
