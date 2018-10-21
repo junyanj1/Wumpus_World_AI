@@ -24,22 +24,27 @@ MyAI::MyAI() : Agent()
 	// ======================================================================
 	// YOUR CODE BEGINS
 	// ======================================================================
-    void update_percept(bool stench,bool breeze){
-        KB[current_X][current_Y].stench = stench;
-        KB[current_X][current_Y].breeze= breeze;
-        KB[current_X][current_Y].visited = true;
-    }
 
-    void update_safe(pair<int,int> pair(int current_X,int current_Y)){
-        //to implement
-    }
-
-    void update_action(Action current_action,int time){
-        //to implement
-    }
 	// ======================================================================
 	// YOUR CODE ENDS
 	// ======================================================================
+}
+
+void MyAI::update_percept(bool stench,bool breeze){
+    KB[current_X][current_Y].stench = stench;
+    KB[current_X][current_Y].breeze= breeze;
+    KB[current_X][current_Y].visited = true;
+}
+
+void MyAI::update_safe(pair<int,int> position ){
+    //to implement
+}
+
+void MyAI::update_action(Agent::Action current_action,int time){
+    //to implement
+}
+deque<Agent::Action> MyAI::route_generator(Position current,Position goal, deque<Tile> allowed_pos ){
+    //to implement
 }
 
 Agent::Action MyAI::getAction
@@ -60,18 +65,18 @@ Agent::Action MyAI::getAction
     //update all safe tiles after last action
     update_safe((pair<int,int>(current_X,current_Y)));
 
-    //found gold?
-	if(glitter){
-		plan.push_back(GRAB);
-
-        //generate a sequence of actions to go back
-        deque<Action> route ;
-        route = route_generator(pair(current_X,current_Y),(0,0),allowed_tiles);
-        plan.insert(plan.cend(),route.begin(),route.end());
-
-        plan.push_back(CLIMB);
-	}
-    //found a route to unvisited & safe tiles?
+//    found gold?
+//	if(glitter){
+//		plan.push_back(GRAB);
+//
+//        //generate a sequence of actions to go back
+//        deque<Action> route ;
+//        route = route_generator(pair<int,int>(current_X,current_Y),pair<int,int>(0,0),allowed_tiles);
+//        plan.insert(plan.cend(),route.begin(),route.end());
+//
+//        plan.push_back(CLIMB);
+//	}
+//    found a route to unvisited & safe tiles?
     if(plan.empty()){
 
     }
@@ -92,17 +97,17 @@ Agent::Action MyAI::getAction
     }
 
     //pop action
-    current_action = plan[0];
-    plan.pop_front();
+//    current_action = plan[0];
+//    plan.pop_front();
 
     //update KB after action
-    update_action(current_action,t);
+//    update_action(current_action,t);
 
     //update time after each action
-	t++;
+	//t++;
 
-
-    return current_action;
+    //current_action
+    return CLIMB;
 	// ======================================================================
 	// YOUR CODE ENDS
 	// ======================================================================

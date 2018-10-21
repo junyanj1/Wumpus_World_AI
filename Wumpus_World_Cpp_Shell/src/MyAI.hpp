@@ -74,8 +74,8 @@ public:
 	vector<Position> safe;
 	vector<Position> unsafe;
 	vector<Position> visited;
-	static int current_X;
-	static int current_Y;
+    int current_X;
+    int current_Y;
 	Action current_action;
 
 	//a sequence of actions
@@ -86,7 +86,7 @@ public:
 
 
 	//knowledge base
-	static  vector<vector<Tile>> KB;
+    vector<vector<Tile> > KB;
 
 
 	//Tell() update KB after getting percepts
@@ -97,14 +97,12 @@ public:
 	//query KB for certain information
 	void Ask(){}
 	//generate an action sequence
-	deque<Action> route_generator(Position current,Position goal, deque<Tile> allowed_pos ){}
+	deque<Action> route_generator(Position current,Position goal, deque<Tile> allowed_pos );
 
 private:
 
-	bool have_arrow;
-	enum agent_dir{
+	//bool have_arrow;
 
-	};
 
 	// ======================================================================
 	// YOUR CODE ENDS
