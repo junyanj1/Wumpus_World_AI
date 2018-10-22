@@ -31,9 +31,25 @@ MyAI::MyAI() : Agent()
 }
 
 void MyAI::update_percept(bool stench,bool breeze){
-    KB[current_X][current_Y].stench = stench;
-    KB[current_X][current_Y].breeze= breeze;
-    KB[current_X][current_Y].visited = true;
+    Tile temp_tile;
+    temp_tile.stench = stench;
+    temp_tile.breeze = breeze;
+    temp_tile.visited = true;
+
+    //check x coordinate
+    if(KB.size() == 0 || KB.size()< current_X){
+        vector<Tile> t;
+        t.push_back(temp_tile);
+        KB.push_back(t);
+    }
+    else if(KB[current_X].size() < current_Y)   {
+        Tile t;
+        for(int i=0;i<current_Y-KB[current_X].size()-1;++i) {
+            KB[current_X].push_back(t);
+        }
+        KB[current_X].push_back(temp_tile);
+
+    }
 }
 
 void MyAI::update_safe(pair<int,int> position ){
@@ -65,18 +81,18 @@ Agent::Action MyAI::getAction
     //update all safe tiles after last action
     update_safe((pair<int,int>(current_X,current_Y)));
 
-//    found gold?
-//	if(glitter){
-//		plan.push_back(GRAB);
-//
-//        //generate a sequence of actions to go back
-//        deque<Action> route ;
-//        route = route_generator(pair<int,int>(current_X,current_Y),pair<int,int>(0,0),allowed_tiles);
-//        plan.insert(plan.cend(),route.begin(),route.end());
-//
-//        plan.push_back(CLIMB);
-//	}
-//    found a route to unvisited & safe tiles?
+    //found gold?
+	if(glitter){
+		plan.push_back(GRAB);
+
+        //generate a sequence of actions to go back
+        deque<Action> route ;
+        route = route_generator(pair<int,int>(current_X,current_Y),pair<int,int>(0,0),allowed_tiles);
+        plan.insert(plan.cend(),route.begin(),route.end());
+
+        plan.push_back(CLIMB);
+	}
+    //found a route to unvisited & safe tiles?
     if(plan.empty()){
 
     }
