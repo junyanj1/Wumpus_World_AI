@@ -27,6 +27,7 @@
 #include <iostream>
 #include <map>
 #include <deque>
+#include <set>
 using namespace std;
 //
 
@@ -78,11 +79,17 @@ public:
     int current_Y;
 	Action current_action;
 
+    //store the expanded tiles of the selected tile
+    map<Position,vector<Position>> tiles_expansion;
+    vector<Position> tiles_position;
+    void store_tile_expansion(int current_X, int current_Y);
+
+
 	//a sequence of actions
 	deque<Action> plan;
 
 	//store all allowed tiles for generating route
-	deque<Tile> allowed_tiles;
+	deque<Position> allowed_tiles;
 
 
 	//knowledge base
@@ -97,7 +104,7 @@ public:
 	//query KB for certain information
 	void Ask(){}
 	//generate an action sequence
-	deque<Action> route_generator(Position current,Position goal, deque<Tile> allowed_pos );
+	deque<Action> route_generator(Position current,Position goal, deque<Position> allowed_pos );
 
 private:
 

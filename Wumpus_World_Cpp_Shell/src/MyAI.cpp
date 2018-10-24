@@ -41,15 +41,55 @@ void MyAI::update_percept(bool stench,bool breeze){
         vector<Tile> t;
         t.push_back(temp_tile);
         KB.push_back(t);
+        //store current(X,Y) and its expandable tiles
+        tiles_position.push_back(Position(current_X,current_Y));
+        store_tile_expansion(current_X,current_Y);
     }
-    else if(KB[current_X].size() < current_Y)   {
+    else if(KB[current_X].size()  < current_Y)   {
         Tile t;
         for(int i=0;i<current_Y-KB[current_X].size()-1;++i) {
             KB[current_X].push_back(t);
         }
         KB[current_X].push_back(temp_tile);
-
+        //store current(X,Y) and its expandable tiles
+        tiles_position.push_back(Position(current_X,current_Y));
+        store_tile_expansion(current_X,current_Y);
     }
+}
+
+void MyAI::store_tile_expansion(int current_X, int current_Y) {
+    vector<Position> expandable_tiles;
+    //left: current_X-1,current_Y
+    if( 0 <= current_X-1 && current_X-1 <= KB.size()-1){
+        if(0 <= current_Y && current_Y <= KB[current_X-1].size()-1){
+            //the two if statements determine there is a tile on the left side
+            expandable_tiles.push_back(Position(current_X-1,current_Y));
+        }
+    }
+    //right: current_X+1,current_Y
+    if( 0 <= current_X+1 && current_X+1 <= KB.size()-1){
+        if(0 <= current_Y && current_Y <= KB[current_X+1].size()-1){
+            //the two if statements determine there is a tile on the right side
+            expandable_tiles.push_back(Position(current_X+1,current_Y));
+        }
+    }
+    //Top: current_X,current_Y+1
+    if( 0 <= current_X && current_X <= KB.size()-1){
+        if(0 <= current_Y+1 && current_Y+1 <= KB[current_X].size()-1){
+            //the two if statements determine there is a tile on the top side
+            expandable_tiles.push_back(Position(current_X,current_Y+1));
+        }
+    }
+    //Bottom: current_X,current_Y-1
+    if( 0 <= current_X && current_X <= KB.size()-1){
+        if(0 <= current_Y-1 && current_Y-1 <= KB[current_X].size()-1){
+            //the two if statements determine there is a tile on the bottom side
+            expandable_tiles.push_back(Position(current_X,current_Y-1));
+        }
+    }
+
+    //add to the tiles_expansion
+    tiles_expansion[Position(current_X,current_Y)] = expandable_tiles;
 }
 
 void MyAI::update_safe(pair<int,int> position ){
@@ -59,8 +99,61 @@ void MyAI::update_safe(pair<int,int> position ){
 void MyAI::update_action(Agent::Action current_action,int time){
     //to implement
 }
-deque<Agent::Action> MyAI::route_generator(Position current,Position goal, deque<Tile> allowed_pos ){
+deque<Agent::Action> MyAI::route_generator(Position current,Position goal, deque<Position> allowed_pos ){
     //to implement
+    deque<Agent::Action> result;
+
+
+    map<Position, vector<Position>> all_solutions;
+
+    all_solutions.insert(all_solutions.cbegin(),pair<Position, vector<Position>>(current, vector<Position>()));
+
+    vector<Position> tiles_to_explore;
+    vector<Position> next_tiles_to_explore;
+    tiles_to_explore.push_back(current);
+
+
+    vector<Position> path_found;
+
+    //BFS
+    while(path_found.empty()) {
+        for (int k = 0; k < tiles_to_explore.size(); ++k) {
+            Position temp_pos = tiles_to_explore[k];
+            for (int i = 0; i < tiles_expansion[temp_pos].size(); ++i) {
+                if (!all_solutions.count(tiles_expansion[temp_pos][i])) {
+                    //all solutions does not contain the position [temp_pos][i], so add it, then copy the path of temp_pos
+                    //make sure tiles_expansion[temp_pos] do not expand back
+                    next_tiles_to_explore.push_back(tiles_expansion[temp_pos][i]);
+                    vector<Position> temp;
+                    if (!all_solutions[temp_pos].empty()) {
+                        temp.push_back(temp_pos);
+                        for (int j = 0; j < all_solutions[temp_pos].size(); ++j) {
+                            temp.push_back(all_solutions[temp_pos][j]);
+                        }
+                    }
+                    else{
+                        temp.push_back(temp_pos);
+                    }
+                    all_solutions[tiles_expansion[temp_pos][i]] = temp;
+                    //check if goal state found
+                    if (tiles_expansion[temp_pos][i] == goal) {
+                        path_found = all_solutions[tiles_expansion[temp_pos][i]];
+                    }
+
+                }
+            }
+        }
+        tiles_to_explore = next_tiles_to_explore;
+        next_tiles_to_explore.clear();
+    }
+
+    //debug path_found
+    for(int i=0;i<path_found.size();++i){
+        cout << "[" <<path_found[i].first << "," << path_found[i].second << "]" << endl;
+    }
+
+    return result;
+
 }
 
 Agent::Action MyAI::getAction
@@ -87,11 +180,60 @@ Agent::Action MyAI::getAction
 
         //generate a sequence of actions to go back
         deque<Action> route ;
-        route = route_generator(pair<int,int>(current_X,current_Y),pair<int,int>(0,0),allowed_tiles);
+        //route = route_generator(pair<int,int>(current_X,current_Y),pair<int,int>(0,0),allowed_tiles);
+
+
         plan.insert(plan.cend(),route.begin(),route.end());
 
         plan.push_back(CLIMB);
 	}
+
+    ////////////////////////for debug///////////////////////////
+    pair<int,int> start = pair<int,int>(0,0);
+    pair<int,int> end = pair<int,int>(2,3);
+    KB.clear();
+    for(int i=0; i<5; ++i) {
+        vector<Tile> temp;
+        KB.push_back(temp);
+        for(int k=0; k<5; ++k) {
+            Tile temp;
+            KB[i].push_back(temp);
+        }
+    }
+
+    tiles_position = vector<Position>{
+            pair<int,int>(0,0),pair<int,int>(0,1),pair<int,int>(0,2),pair<int,int>(0,3),pair<int,int>(0,4),
+            pair<int,int>(1,0),pair<int,int>(1,1),pair<int,int>(1,2),pair<int,int>(1,3),pair<int,int>(1,4),
+            pair<int,int>(2,0),pair<int,int>(2,1),pair<int,int>(2,2),pair<int,int>(2,3),pair<int,int>(2,4),
+            pair<int,int>(3,0),pair<int,int>(3,1),pair<int,int>(3,2),pair<int,int>(3,3),pair<int,int>(3,4),
+            pair<int,int>(4,0),pair<int,int>(4,1),pair<int,int>(4,2),pair<int,int>(4,3),pair<int,int>(4,4),
+    };
+    for(int i=0; i < tiles_position.size(); ++i){
+        store_tile_expansion(tiles_position[i].first,tiles_position[i].second);
+    }
+    //debug store_tile_expansion()
+//    for(int i=0; i<5; ++i) {
+//        for(int k=0; k<5; ++k) {
+//            cout << "[" << i << "," << k << "]" << endl;//tiles_expansion[pair<int, int>(i, k)].size() << endl;
+//            for(int j=0;j<tiles_expansion[pair<int, int>(i, k)].size();++j){
+//                cout<<tiles_expansion[pair<int, int>(i, k)][j].first << ","<< tiles_expansion[pair<int, int>(i, k)][j].second << endl;
+//            }
+//
+//
+//        }
+//    }
+    deque<Position> allowed_tiles{
+            pair<int,int>(0,0),pair<int,int>(0,1),pair<int,int>(0,2),pair<int,int>(0,3),pair<int,int>(0,4),
+            pair<int,int>(1,0),pair<int,int>(1,1),pair<int,int>(1,2),pair<int,int>(1,3),pair<int,int>(1,4),
+            pair<int,int>(2,0),pair<int,int>(2,1),pair<int,int>(2,2),pair<int,int>(2,3),pair<int,int>(2,4),
+            pair<int,int>(3,0),pair<int,int>(3,1),pair<int,int>(3,2),pair<int,int>(3,3),pair<int,int>(3,4),
+            pair<int,int>(4,0),pair<int,int>(4,1),pair<int,int>(4,2),pair<int,int>(4,3),pair<int,int>(4,4),
+    };
+    route_generator(start,end,allowed_tiles);
+
+    ////////////////////////for debug///////////////////////////
+
+
     //found a route to unvisited & safe tiles?
     if(plan.empty()){
 
