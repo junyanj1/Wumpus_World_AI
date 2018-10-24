@@ -104,9 +104,12 @@ public:
 
 	//query KB for certain information
 	void Ask(){}
+
 	//generate an action sequence
 	vector<Position> route_generator(Position current,Position goal, deque<Position> allowed_pos );
     deque<Action> actions_generator(vector<Position> route);
+
+
 
 private:
 

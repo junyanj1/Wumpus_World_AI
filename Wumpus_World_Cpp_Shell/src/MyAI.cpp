@@ -101,7 +101,6 @@ void MyAI::update_action(Agent::Action current_action,int time){
     current_time = time;
     switch (current_action){
         case Agent:: FORWARD:
-            //right
             if(current_Dir == 0)
                 current_X++;
             else if(current_Dir == 1)
@@ -182,6 +181,10 @@ vector<Position> MyAI::route_generator(Position current,Position goal, deque<Pos
         next_tiles_to_explore.clear();
     }
 
+    //format path_found
+    path_found.pop_back();
+    path_found.insert(path_found.begin(),goal);
+
     //debug path_found
     for(int i=0;i<path_found.size();++i){
         cout << "[" <<path_found[i].first << "," << path_found[i].second << "]" << endl;
@@ -192,7 +195,45 @@ vector<Position> MyAI::route_generator(Position current,Position goal, deque<Pos
 }
 
 deque<Agent::Action> MyAI::actions_generator(vector<Position> route) {
-    //To implement
+    deque<Action> actions;
+    vector<Position> route_get = route;
+
+    while (!route_get.empty()) {
+        int target_dir;
+        Position next_tile = route_get[route_get.size() - 1];
+        route_get.pop_back();
+
+        if (next_tile.first > current_X)
+            target_dir = 0;
+        else if (next_tile.first < current_X)
+            target_dir = 2;
+        else if (next_tile.second > current_Y)
+            target_dir = 1;
+        else if (next_tile.second < current_Y)
+            target_dir = 3;
+
+        //turn right, and move forward
+        if (current_Dir - target_dir == 1 || current_Dir - target_dir == -3) {
+            actions.push_back(TURN_RIGHT);
+            actions.push_back(FORWARD);
+        }
+        //turn left, and move forward
+        else if (current_Dir - target_dir == -1 || current_Dir - target_dir == 3) {
+            actions.push_back(TURN_LEFT);
+            actions.push_back(FORWARD);
+        }
+        //turn back, and move forward
+        else if (current_Dir - target_dir == -2 || current_Dir - target_dir == 2){
+            actions.push_back(TURN_LEFT);
+            actions.push_back(TURN_LEFT);
+            actions.push_back(FORWARD);
+        }
+        //same dir, move forward
+        else{
+            actions.push_back(FORWARD);
+        }
+    }
+    return actions;
 
 }
 
@@ -309,7 +350,7 @@ Agent::Action MyAI::getAction
 	current_time++;
 
     //current_action
-    return current_action;
+    return CLIMB;
 	// ======================================================================
 	// YOUR CODE ENDS
 	// ======================================================================
