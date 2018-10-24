@@ -99,7 +99,7 @@ void MyAI::update_safe(pair<int,int> position ){
 void MyAI::update_action(Agent::Action current_action,int time){
     //to implement
 }
-deque<Agent::Action> MyAI::route_generator(Position current,Position goal, deque<Position> allowed_pos ){
+vector<Position> MyAI::route_generator(Position current,Position goal, deque<Position> allowed_pos ){
     //to implement
     deque<Agent::Action> result;
 
@@ -152,7 +152,12 @@ deque<Agent::Action> MyAI::route_generator(Position current,Position goal, deque
         cout << "[" <<path_found[i].first << "," << path_found[i].second << "]" << endl;
     }
 
-    return result;
+    return path_found;
+
+}
+
+deque<Action> MyAI::actions_generator(vector<Position> route) {
+    //To implement
 
 }
 
@@ -179,11 +184,13 @@ Agent::Action MyAI::getAction
 		plan.push_back(GRAB);
 
         //generate a sequence of actions to go back
-        deque<Action> route ;
-        //route = route_generator(pair<int,int>(current_X,current_Y),pair<int,int>(0,0),allowed_tiles);
+        vector<Position> route ;
+        deque<Action> actions;
+        route = route_generator(pair<int,int>(current_X,current_Y),pair<int,int>(0,0),allowed_tiles);
+        actions = actions_generator(route);
 
 
-        plan.insert(plan.cend(),route.begin(),route.end());
+        plan.insert(plan.cend(),actions.begin(),actions.end());
 
         plan.push_back(CLIMB);
 	}

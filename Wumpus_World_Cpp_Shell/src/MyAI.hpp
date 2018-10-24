@@ -78,6 +78,7 @@ public:
     int current_X;
     int current_Y;
 	Action current_action;
+    int current_Dir;
 
     //store the expanded tiles of the selected tile
     map<Position,vector<Position>> tiles_expansion;
@@ -104,7 +105,8 @@ public:
 	//query KB for certain information
 	void Ask(){}
 	//generate an action sequence
-	deque<Action> route_generator(Position current,Position goal, deque<Position> allowed_pos );
+	vector<Position> route_generator(Position current,Position goal, deque<Position> allowed_pos );
+    deque<Action> actions_generator(vector<Position> route);
 
 private:
 
