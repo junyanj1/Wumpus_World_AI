@@ -30,6 +30,7 @@ MyAI::MyAI() : Agent()
 	// ======================================================================
 }
 
+
 void MyAI::update_percept(bool stench,bool breeze){
     Tile temp_tile;
     temp_tile.stench = stench;
@@ -97,10 +98,44 @@ void MyAI::update_safe(pair<int,int> position ){
 }
 
 void MyAI::update_action(Agent::Action current_action,int time){
-    //to implement
+    current_time = time;
+    switch (current_action){
+        case Agent:: FORWARD:
+            //right
+            if(current_Dir == 0)
+                current_X++;
+            else if(current_Dir == 1)
+                current_Y++;
+            else if(current_Dir == 2)
+                current_X --;
+            else if(current_Dir == 3)
+                current_Y --;
+            break;
+        case Agent:: TURN_LEFT:
+            if(current_Dir != 3)
+                current_Dir ++;
+            else
+                current_Dir = 0;
+            break;
+        case Agent:: TURN_RIGHT:
+            if(current_Dir != 0)
+                current_Dir --;
+            else
+                current_Dir = 3;
+            break;
+        case Agent:: SHOOT:
+            have_arrow = false;
+            break;
+        case Agent:: GRAB:
+            got_gold = true;
+            break;
+        case Agent:: CLIMB:
+            break;
+
+
+    }
 }
 vector<Position> MyAI::route_generator(Position current,Position goal, deque<Position> allowed_pos ){
-    //to implement
     deque<Agent::Action> result;
 
 
@@ -156,7 +191,7 @@ vector<Position> MyAI::route_generator(Position current,Position goal, deque<Pos
 
 }
 
-deque<Action> MyAI::actions_generator(vector<Position> route) {
+deque<Agent::Action> MyAI::actions_generator(vector<Position> route) {
     //To implement
 
 }
@@ -195,30 +230,30 @@ Agent::Action MyAI::getAction
         plan.push_back(CLIMB);
 	}
 
-    ////////////////////////for debug///////////////////////////
-    pair<int,int> start = pair<int,int>(0,0);
-    pair<int,int> end = pair<int,int>(2,3);
-    KB.clear();
-    for(int i=0; i<5; ++i) {
-        vector<Tile> temp;
-        KB.push_back(temp);
-        for(int k=0; k<5; ++k) {
-            Tile temp;
-            KB[i].push_back(temp);
-        }
-    }
-
-    tiles_position = vector<Position>{
-            pair<int,int>(0,0),pair<int,int>(0,1),pair<int,int>(0,2),pair<int,int>(0,3),pair<int,int>(0,4),
-            pair<int,int>(1,0),pair<int,int>(1,1),pair<int,int>(1,2),pair<int,int>(1,3),pair<int,int>(1,4),
-            pair<int,int>(2,0),pair<int,int>(2,1),pair<int,int>(2,2),pair<int,int>(2,3),pair<int,int>(2,4),
-            pair<int,int>(3,0),pair<int,int>(3,1),pair<int,int>(3,2),pair<int,int>(3,3),pair<int,int>(3,4),
-            pair<int,int>(4,0),pair<int,int>(4,1),pair<int,int>(4,2),pair<int,int>(4,3),pair<int,int>(4,4),
-    };
-    for(int i=0; i < tiles_position.size(); ++i){
-        store_tile_expansion(tiles_position[i].first,tiles_position[i].second);
-    }
-    //debug store_tile_expansion()
+    ////////////////////////////////////////////////FOR DEBUG///////////////////////////////////////////////////
+//    pair<int,int> start = pair<int,int>(0,0);
+//    pair<int,int> end = pair<int,int>(2,3);
+//    KB.clear();
+//    for(int i=0; i<5; ++i) {
+//        vector<Tile> temp;
+//        KB.push_back(temp);
+//        for(int k=0; k<5; ++k) {
+//            Tile temp;
+//            KB[i].push_back(temp);
+//        }
+//    }
+//
+//    tiles_position = vector<Position>{
+//            pair<int,int>(0,0),pair<int,int>(0,1),pair<int,int>(0,2),pair<int,int>(0,3),pair<int,int>(0,4),
+//            pair<int,int>(1,0),pair<int,int>(1,1),pair<int,int>(1,2),pair<int,int>(1,3),pair<int,int>(1,4),
+//            pair<int,int>(2,0),pair<int,int>(2,1),pair<int,int>(2,2),pair<int,int>(2,3),pair<int,int>(2,4),
+//            pair<int,int>(3,0),pair<int,int>(3,1),pair<int,int>(3,2),pair<int,int>(3,3),pair<int,int>(3,4),
+//            pair<int,int>(4,0),pair<int,int>(4,1),pair<int,int>(4,2),pair<int,int>(4,3),pair<int,int>(4,4),
+//    };
+//    for(int i=0; i < tiles_position.size(); ++i){
+//        store_tile_expansion(tiles_position[i].first,tiles_position[i].second);
+//    }
+//    //debug store_tile_expansion()
 //    for(int i=0; i<5; ++i) {
 //        for(int k=0; k<5; ++k) {
 //            cout << "[" << i << "," << k << "]" << endl;//tiles_expansion[pair<int, int>(i, k)].size() << endl;
@@ -229,16 +264,16 @@ Agent::Action MyAI::getAction
 //
 //        }
 //    }
-    deque<Position> allowed_tiles{
-            pair<int,int>(0,0),pair<int,int>(0,1),pair<int,int>(0,2),pair<int,int>(0,3),pair<int,int>(0,4),
-            pair<int,int>(1,0),pair<int,int>(1,1),pair<int,int>(1,2),pair<int,int>(1,3),pair<int,int>(1,4),
-            pair<int,int>(2,0),pair<int,int>(2,1),pair<int,int>(2,2),pair<int,int>(2,3),pair<int,int>(2,4),
-            pair<int,int>(3,0),pair<int,int>(3,1),pair<int,int>(3,2),pair<int,int>(3,3),pair<int,int>(3,4),
-            pair<int,int>(4,0),pair<int,int>(4,1),pair<int,int>(4,2),pair<int,int>(4,3),pair<int,int>(4,4),
-    };
-    route_generator(start,end,allowed_tiles);
+//    deque<Position> allowed_tiles{
+//            pair<int,int>(0,0),pair<int,int>(0,1),pair<int,int>(0,2),pair<int,int>(0,3),pair<int,int>(0,4),
+//            pair<int,int>(1,0),pair<int,int>(1,1),pair<int,int>(1,2),pair<int,int>(1,3),pair<int,int>(1,4),
+//            pair<int,int>(2,0),pair<int,int>(2,1),pair<int,int>(2,2),pair<int,int>(2,3),pair<int,int>(2,4),
+//            pair<int,int>(3,0),pair<int,int>(3,1),pair<int,int>(3,2),pair<int,int>(3,3),pair<int,int>(3,4),
+//            pair<int,int>(4,0),pair<int,int>(4,1),pair<int,int>(4,2),pair<int,int>(4,3),pair<int,int>(4,4),
+//    };
+//    route_generator(start,end,allowed_tiles);
 
-    ////////////////////////for debug///////////////////////////
+    ////////////////////////////////////////////////FOR DEBUG///////////////////////////////////////////////////
 
 
     //found a route to unvisited & safe tiles?
@@ -262,17 +297,19 @@ Agent::Action MyAI::getAction
     }
 
     //pop action
-//    current_action = plan[0];
-//    plan.pop_front();
+    if(!plan.empty()) {
+        current_action = plan[0];
+        plan.pop_front();
+    }
 
     //update KB after action
-//    update_action(current_action,t);
+    update_action(current_action,current_time);
 
     //update time after each action
-	//t++;
+	current_time++;
 
     //current_action
-    return CLIMB;
+    return current_action;
 	// ======================================================================
 	// YOUR CODE ENDS
 	// ======================================================================

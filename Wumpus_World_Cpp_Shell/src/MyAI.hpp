@@ -69,16 +69,16 @@ public:
 	// YOUR CODE BEGINS
 	// ======================================================================
 
-	//time
-	int t;
-
+	int current_time = 0;
 	vector<Position> safe;
 	vector<Position> unsafe;
 	vector<Position> visited;
     int current_X;
     int current_Y;
 	Action current_action;
-    int current_Dir;
+    int current_Dir = 0;
+    bool have_arrow = true;
+    bool got_gold = false;
 
     //store the expanded tiles of the selected tile
     map<Position,vector<Position>> tiles_expansion;
@@ -110,7 +110,7 @@ public:
 
 private:
 
-	//bool have_arrow;
+
 
 
 	// ======================================================================
