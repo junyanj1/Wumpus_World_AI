@@ -39,7 +39,7 @@ struct Tile
 {
 	bool pit    = false;
 	bool wumpus = false;
-	bool gold   = false;
+	bool glitter  = false;
 
 	bool breeze = false;
 	bool stench = false;
@@ -70,9 +70,9 @@ public:
 	// ======================================================================
 
 	int current_time = 0;
-	vector<Position> safe;
-	vector<Position> unsafe;
-	vector<Position> visited;
+	deque<Position> safe;
+	deque<Position> unsafe;
+
     int current_X;
     int current_Y;
 	Action current_action;
@@ -89,9 +89,6 @@ public:
 	//a sequence of actions
 	deque<Action> plan;
 
-	//store all allowed tiles for generating route
-	deque<Position> allowed_tiles;
-
 
 	//knowledge base
     vector<vector<Tile> > KB;
@@ -106,7 +103,7 @@ public:
 	void Ask(){}
 
 	//generate an action sequence
-	vector<Position> route_generator(Position current,Position goal, deque<Position> allowed_pos );
+	vector<Position> route_generator(Position current,deque<Position> goals, deque<Position> allowed_tiles );
     deque<Action> actions_generator(vector<Position> route);
 
 
