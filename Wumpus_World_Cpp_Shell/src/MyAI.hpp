@@ -28,6 +28,7 @@
 #include <map>
 #include <deque>
 #include <set>
+#include <algorithm>
 using namespace std;
 //
 
@@ -73,8 +74,11 @@ public:
 	deque<Position> safe;
 	deque<Position> unsafe;
 
-    int current_X;
-    int current_Y;
+
+    int bump_X = INT_MAX;
+    int bump_Y = INT_MAX;
+    int current_X = 0;
+    int current_Y = 0;
 	Action current_action;
     int current_Dir = 0;
     bool have_arrow = true;
@@ -96,7 +100,7 @@ public:
 
 	//Tell() update KB after getting percepts
 	void update_percept(bool stench,bool breeze);
-	void update_safe(pair<int,int> position);
+	void update_safe();
 	void update_action(Action current_action, int t);
 
 	//query KB for certain information

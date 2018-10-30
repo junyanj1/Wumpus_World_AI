@@ -35,28 +35,38 @@ void MyAI::update_percept(bool stench,bool breeze){
     Tile temp_tile;
     temp_tile.stench = stench;
     temp_tile.breeze = breeze;
-    temp_tile.visited = true;
+    //temp_tile.visited = true;
 
+    //generate a new tile of current position
     //check x coordinate
-    if(KB.size() == 0 || KB.size()< current_X){
+
+    if(KB.size() < current_X+1){
         vector<Tile> t;
         t.push_back(temp_tile);
         KB.push_back(t);
-        //store current(X,Y) and its expandable tiles
+
+        //store current(X,Y)
         tiles_position.push_back(Position(current_X,current_Y));
-        store_tile_expansion(current_X,current_Y);
+
     }
-    else if(KB[current_X].size()  < current_Y)   {
+    else if(KB[current_X].size()  < current_Y+1)   {
         Tile t;
-        for(int i=0;i<current_Y-KB[current_X].size()-1;++i) {
+        for(int i=0;i<current_Y-KB[current_X].size();++i) {
             KB[current_X].push_back(t);
         }
         KB[current_X].push_back(temp_tile);
-        //store current(X,Y) and its expandable tiles
+
+        //store current(X,Y)
         tiles_position.push_back(Position(current_X,current_Y));
-        store_tile_expansion(current_X,current_Y);
+
+    }
+    else{
+        //current position has a tile
+        KB[current_X][current_Y].breeze = breeze;
+        KB[current_X][current_Y].stench = stench;
     }
 }
+
 
 void MyAI::store_tile_expansion(int current_X, int current_Y) {
     vector<Position> expandable_tiles;
@@ -65,27 +75,44 @@ void MyAI::store_tile_expansion(int current_X, int current_Y) {
         if(0 <= current_Y && current_Y <= KB[current_X-1].size()-1){
             //the two if statements determine there is a tile on the left side
             expandable_tiles.push_back(Position(current_X-1,current_Y));
+            //also, this tile itself is a expandable tile of the left tile
+            if(tiles_expansion.count(Position(current_X+1,current_Y))){
+                tiles_expansion[Position(current_X-1,current_Y)].push_back(Position(current_X,current_Y));
+            }
         }
     }
     //right: current_X+1,current_Y
     if( 0 <= current_X+1 && current_X+1 <= KB.size()-1){
         if(0 <= current_Y && current_Y <= KB[current_X+1].size()-1){
-            //the two if statements determine there is a tile on the right side
+            //the two if statements above determine there is a tile on the right side
             expandable_tiles.push_back(Position(current_X+1,current_Y));
+            //also, this tile itself is a expandable tile of the right tile
+            if(tiles_expansion.count(Position(current_X+1,current_Y))){
+                tiles_expansion[Position(current_X+1,current_Y)].push_back(Position(current_X,current_Y));
+            }
+
         }
     }
     //Top: current_X,current_Y+1
     if( 0 <= current_X && current_X <= KB.size()-1){
         if(0 <= current_Y+1 && current_Y+1 <= KB[current_X].size()-1){
-            //the two if statements determine there is a tile on the top side
+            //the two if statements above determine there is a tile on the top side
             expandable_tiles.push_back(Position(current_X,current_Y+1));
+            //also, this tile itself is a expandable tile of the top tile
+            if(tiles_expansion.count(Position(current_X+1,current_Y))){
+                tiles_expansion[Position(current_X,current_Y+1)].push_back(Position(current_X,current_Y));
+            }
         }
     }
     //Bottom: current_X,current_Y-1
     if( 0 <= current_X && current_X <= KB.size()-1){
         if(0 <= current_Y-1 && current_Y-1 <= KB[current_X].size()-1){
-            //the two if statements determine there is a tile on the bottom side
+            //the two if statements above determine there is a tile on the bottom side
             expandable_tiles.push_back(Position(current_X,current_Y-1));
+            //also, this tile itself is a expandable tile of the bottom tile
+            if(tiles_expansion.count(Position(current_X+1,current_Y))){
+                tiles_expansion[Position(current_X,current_Y-1)].push_back(Position(current_X,current_Y));
+            }
         }
     }
 
@@ -93,22 +120,61 @@ void MyAI::store_tile_expansion(int current_X, int current_Y) {
     tiles_expansion[Position(current_X,current_Y)] = expandable_tiles;
 }
 
-void MyAI::update_safe(pair<int,int> position ){
+void MyAI::update_safe(){
     //to implement
+    Position temp_pos(current_X,current_Y);
 
-    safe.push_back(position);
-    Tile temp_tile = KB[position.first][position.second];
+    if(find(safe.begin(),safe.end(),temp_pos) == safe.end())
+        //check safe does not have current position
+        safe.push_back(temp_pos);
+
+
+    Tile temp_tile = KB[current_X][current_Y];
+    //this tiles doesn't have breeze or stench, which means the other tiles around it are also safe
     if(!temp_tile.breeze && !temp_tile.stench){
-        for(int i=0; i<tiles_expansion[position].size();++i){
-            safe.push_back(tiles_expansion[position][i]);
+        //problem here
+
+        //create left tile if can exist
+        current_X--;
+        if(current_X >=0)
+            update_percept(true,true);
+        //create top tile if can exist
+        current_X++;
+        current_Y++;
+        if(current_Y < bump_Y)
+            update_percept(true, true);
+        //create right tile if can exist
+        current_Y--;
+        current_X++;
+        if(current_X < bump_X)
+            update_percept(true,true);
+        //create bottom tile if can exist
+        current_X--;
+        current_Y--;
+        if(current_Y >= 0)
+            update_percept(true,true);
+        //recover current x,y
+        current_Y++;
+
+
+        store_tile_expansion(current_X,current_Y);
+        for(int i=0; i<tiles_expansion[temp_pos].size();++i){
+            if(find(safe.begin(),safe.end(),tiles_expansion[temp_pos][i]) == safe.end())
+                safe.push_back(tiles_expansion[temp_pos][i]);
         }
     }
+    else {
+        //store all expandable tiles around the tile of current
+        store_tile_expansion(current_X,current_Y);
+    }
+
 
 
 }
 
 void MyAI::update_action(Agent::Action current_action,int time){
     current_time = time;
+    KB[current_X][current_Y].visited = true;
     switch (current_action){
         case Agent:: FORWARD:
             if(current_Dir == 0)
@@ -116,9 +182,9 @@ void MyAI::update_action(Agent::Action current_action,int time){
             else if(current_Dir == 1)
                 current_Y++;
             else if(current_Dir == 2)
-                current_X --;
+                current_X--;
             else if(current_Dir == 3)
-                current_Y --;
+                current_Y--;
             break;
         case Agent:: TURN_LEFT:
             if(current_Dir != 3)
@@ -158,12 +224,17 @@ vector<Position> MyAI::route_generator(Position current,deque<Position> goals, d
     tiles_to_explore.push_back(current);
 
     Position goal;
-
-
     vector<Position> path_found;
+    bool goal_found = false;
+
+    //current position is already the goal position
+    if(find(goals.begin(),goals.end(),current)!= goals.end()){
+        goal_found = true;
+    }
+
 
     //BFS
-    while(path_found.empty()) {
+    while(!goal_found) {
         for (int k = 0; k < tiles_to_explore.size(); ++k) {
             Position temp_pos = tiles_to_explore[k];
             for (int i = 0; i < tiles_expansion[temp_pos].size(); ++i) {
@@ -188,6 +259,7 @@ vector<Position> MyAI::route_generator(Position current,deque<Position> goals, d
                     if (find(goals.begin(),goals.end(),tiles_expansion[temp_pos][i]) != goals.end() ) {
                         goal = tiles_expansion[temp_pos][i];
                         path_found = all_solutions[tiles_expansion[temp_pos][i]];
+                        goal_found = true;
                     }
 
                 }
@@ -232,6 +304,10 @@ deque<Agent::Action> MyAI::actions_generator(vector<Position> route) {
             target_dir = 1;
         else if (next_tile.second < temp_y)
             target_dir = 3;
+        else{
+            //current tile is next tile, which means current position is goal
+            return actions;
+        }
 
         //turn right, and move forward
         if (temp_dir - target_dir == 1 || temp_dir - target_dir == -3) {
@@ -257,6 +333,7 @@ deque<Agent::Action> MyAI::actions_generator(vector<Position> route) {
         temp_x = next_tile.first;
         temp_y = next_tile.second;
         temp_dir = target_dir;
+
     }
     return actions;
 
@@ -275,117 +352,204 @@ Agent::Action MyAI::getAction
 	// YOUR CODE BEGINS
 	// ======================================================================
 
-    //update percepts of current tile
-    update_percept(stench,breeze);
-    //update all safe tiles after last action
-    update_safe((pair<int,int>(current_X,current_Y)));
+    if(!bump) {
+        //update percepts of current tile
+        update_percept(stench, breeze);
+        //update all safe tiles after last action
+        update_safe();
+    }
 
 
-
-
-
-    //found gold?
-	if(glitter){
-		plan.push_back(GRAB);
-
-        //generate a sequence of actions to go back
-        vector<Position> route ;
-        deque<Action> actions;
-        deque<Position> goals;
-        deque<Position> allowed_tiles;
-
-        allowed_tiles = safe;
-
-
-        goals.push_back(pair<int,int>(0,0));
-        route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
-        actions = actions_generator(route);
-
-        if(!route.empty()) {
-            actions = actions_generator(route);
-            plan.insert(plan.cend(), actions.begin(), actions.end());
-        }
-
-        plan.push_back(CLIMB);
-	}
     /////////////for minimal AI
-    else if(breeze || stench){
-        //generate a sequence of actions to go back
-        vector<Position> route ;
-        deque<Action> actions;
-        deque<Position> allowed_tiles;
+    if(plan.empty()) {
+        //found gold?
+        if(glitter){
+            plan.push_back(GRAB);
 
-        allowed_tiles = safe;
+            //generate a sequence of actions to go back
+            vector<Position> route ;
+            deque<Action> actions;
+            deque<Position> goals;
+            deque<Position> allowed_tiles;
+
+            allowed_tiles = safe;
+            goals.push_back(pair<int,int>(0,0));
 
 
-
-        deque<Position> goals;
-        goals.push_back(pair<int,int>(0,0));
-        route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
-
-        if(!route.empty()) {
-            actions = actions_generator(route);
-            plan.insert(plan.cend(), actions.begin(), actions.end());
-        }
-
-        plan.push_back(CLIMB);
-
-    }
-    else if(bump){
-        //erase current position(in the wall) from safe
-        deque<Position>::iterator it = find(safe.begin(),safe.end(),Position(current_X,current_Y));
-        safe.erase(it);
-
-        //reverse position
-        if(current_Dir == 0)
-            current_X--;
-        if(current_Dir == 1)
-            current_Y--;
-        if(current_Dir == 2)
-            current_X++;
-        if(current_Dir == 3)
-            current_Y++;
-
-        vector<Position> route ;
-        deque<Action> actions;
-        deque<Position> goals;
-        deque<Position> allowed_tiles;
-
-        for(int i=0;i<safe.size();++i){
-            if(!KB[safe[i].first][safe[i].second].visited){
-                allowed_tiles.push_back(safe[i]);
+            route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
+            if(!route.empty()) {
+                actions = actions_generator(route);
+                if(!actions.empty())
+                    plan.insert(plan.cend(), actions.begin(), actions.end());
             }
+
+            plan.push_back(CLIMB);
         }
+        else if (bump) {
+            //erase current position(in the wall) from safe
 
-        goals.insert(goals.cbegin(),safe.begin(),safe.end());
-
-        route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
-        actions = actions_generator(route);
-
-        plan.insert(plan.cend(),actions.begin(),actions.end());
+            //debug
+            cout << "!!!!!!!!!!!!!!!";
 
 
-    }
+            deque<Position>::iterator it = find(safe.begin(), safe.end(), Position(current_X, current_Y));
+            safe.erase(it);
+            vector<pair<int,int>>::iterator _it = find(tiles_position.begin(),tiles_position.end(),Position(current_X, current_Y));
+            tiles_position.erase(_it);
 
-    else{
-        vector<Position> route ;
-        deque<Action> actions;
-        deque<Position> goals;
-        deque<Position> allowed_tiles;
 
-        for(int i=0;i<safe.size();++i){
-            if(!KB[safe[i].first][safe[i].second].visited){
-                allowed_tiles.push_back(safe[i]);
+            //reverse position
+            if (current_Dir == 0){
+                bump_X = current_X;
+                KB.pop_back();
+                current_X--;
             }
+            if (current_Dir == 1) {
+                bump_Y = current_Y;
+                KB[current_X].pop_back();
+                current_Y--;
+            }
+            if (current_Dir == 2)
+                current_X++;
+            if (current_Dir == 3)
+                current_Y++;
+
+            //debug
+            cout << "current:" << current_X  << "," << current_Y << endl;
+
+            vector<Position> route;
+            deque<Action> actions;
+            deque<Position> goals;
+            deque<Position> allowed_tiles;
+
+            for (int i = 0; i < safe.size(); i++) {
+                //allowed tiles contain all safe tiles
+                allowed_tiles.push_back(safe[i]);
+                //any safe tile which is not current tile or visited tile can be the goal tile
+                if (safe[i] != Position(current_X, current_Y) && KB[safe[i].first][safe[i].second].visited == false) {
+                    goals.push_back(safe[i]);
+                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
+                }
+            }
+
+
+            if(!goals.empty()){
+                route = route_generator(pair<int, int>(current_X, current_Y), goals, allowed_tiles);
+                if(!route.empty())
+                    actions = actions_generator(route);
+                if(!actions.empty())
+                    plan.insert(plan.cend(), actions.begin(), actions.end());
+            }
+                //no goal tile, just go home
+            else{
+                goals.push_back(pair<int,int>(0,0));
+                route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
+                if(!route.empty()) {
+                    actions = actions_generator(route);
+                    if(!actions.empty())
+                        plan.insert(plan.cend(), actions.begin(), actions.end());
+                }
+                plan.push_back(CLIMB);
+
+            }
+
+
+
+
+
+        } else if (breeze || stench) {
+            //generate a sequence of actions to go back
+            vector<Position> route;
+            deque<Action> actions;
+            deque<Position> allowed_tiles;
+
+            allowed_tiles = safe;
+            deque<Position> goals;
+
+
+            goals.push_back(pair<int, int>(0, 0));
+            route = route_generator(pair<int, int>(current_X, current_Y), goals, allowed_tiles);
+
+            if (!route.empty()) {
+                actions = actions_generator(route);
+                if (!actions.empty())
+                    plan.insert(plan.cend(), actions.begin(), actions.end());
+            }
+
+            plan.push_back(CLIMB);
+
         }
+        else {
+            vector<Position> route;
+            deque<Action> actions;
+            deque<Position> goals;
+            deque<Position> allowed_tiles;
 
-        goals.insert(goals.cbegin(),safe.begin(),safe.end());
 
-        route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
-        actions = actions_generator(route);
+            cout << "current:" << current_X  << "," << current_Y << endl;
 
-        plan.insert(plan.cend(),actions.begin(),actions.end());
+            for (int i = 0; i < safe.size(); i++) {
+                //allowed tiles contain all safe tiles
+                allowed_tiles.push_back(safe[i]);
+                //any safe tile which is not current tile or visited tile can be the goal tile
+                if (safe[i] != Position(current_X, current_Y) && !KB[safe[i].first][safe[i].second].visited ) {
+                    goals.push_back(safe[i]);
 
+                    //debug
+                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
+                }
+            }
+
+            if(!goals.empty()) {
+
+                //debug
+//            for (int i = 0; i < goals.size(); ++i) {
+//                cout << "[" << goals[i].first << "," << goals[i].second << "]" << endl;
+//            }
+
+                route = route_generator(pair<int, int>(current_X, current_Y), goals, allowed_tiles);
+
+                if (!route.empty())
+                    actions = actions_generator(route);
+
+                //debug
+//            for (int i = 0; i < actions.size(); ++i) {
+//                if (actions[i] == TURN_RIGHT) {
+//                    cout << "R" << endl;
+//                }
+//                if (actions[i] == TURN_LEFT) {
+//                    cout << "L" << endl;
+//                }
+//                if (actions[i] == FORWARD) {
+//                    cout << "F" << endl;
+//                }
+//                if (actions[i] == SHOOT) {
+//                    cout << "S" << endl;
+//                }
+//                if (actions[i] == GRAB) {
+//                    cout << "G" << endl;
+//                }
+//                if (actions[i] == CLIMB) {
+//                    cout << "C" << endl;
+//                }
+//            }
+
+                if (!actions.empty())
+                    plan.insert(plan.cend(), actions.begin(), actions.end());
+            }
+                //no goal, just go home
+            else{
+                goals.push_back(pair<int,int>(0,0));
+                route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
+                if(!route.empty()) {
+                    actions = actions_generator(route);
+                    if(!actions.empty())
+                        plan.insert(plan.cend(), actions.begin(), actions.end());
+                }
+                plan.push_back(CLIMB);
+            }
+
+        }
     }
 
     /////////////
@@ -394,7 +558,7 @@ Agent::Action MyAI::getAction
 
     ////////////////////////////////////////////////FOR DEBUG///////////////////////////////////////////////////
 //    pair<int,int> start = pair<int,int>(0,0);
-//    deque<Position> end = deque<Position>{Position(3,4),Position(2,3)};
+//    deque<Position> end = deque<Position>{Position(1,0),Position(0,1)};
 //    KB.clear();
 //    for(int i=0; i<5; ++i) {
 //        vector<Tile> temp;
@@ -488,15 +652,35 @@ Agent::Action MyAI::getAction
     }
 
     //update KB after action
-    if(!bump)
-        update_action(current_action,current_time);
+    update_action(current_action,current_time);
 
 
     //update time after each action
 	current_time++;
 
+    //debug
+    if(current_action == TURN_RIGHT){
+        cout<< "R";
+    }
+    if(current_action == TURN_LEFT){
+        cout<< "L";
+    }
+    if(current_action == FORWARD){
+        cout<< "F";
+    }
+    if(current_action == SHOOT){
+        cout<< "S";
+    }
+    if(current_action == GRAB){
+        cout<< "G";
+    }
+    if(current_action == CLIMB){
+        cout<< "C";
+    }
+
+
     //current_action
-    return CLIMB;
+    return current_action;
 	// ======================================================================
 	// YOUR CODE ENDS
 	// ======================================================================
