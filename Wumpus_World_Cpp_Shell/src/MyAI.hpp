@@ -29,7 +29,6 @@
 #include <deque>
 #include <set>
 #include <algorithm>
-#include <climits>
 using namespace std;
 //
 
@@ -76,8 +75,8 @@ public:
 	deque<Position> unsafe;
 
 
-    int bump_X = INT_MAX;
-    int bump_Y = INT_MAX;
+    int bump_X = 10;
+    int bump_Y = 10;
     int current_X = 0;
     int current_Y = 0;
 	Action current_action;
