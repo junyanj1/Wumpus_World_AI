@@ -389,7 +389,7 @@ Agent::Action MyAI::getAction
             //erase current position(in the wall) from safe
 
             //debug
-            cout << "!!!!!!!!!!!!!!!";
+//            cout << "!!!!!!!!!!!!!!!";
 
 
             deque<Position>::iterator it = find(safe.begin(), safe.end(), Position(current_X, current_Y));
@@ -415,7 +415,7 @@ Agent::Action MyAI::getAction
                 current_Y++;
 
             //debug
-            cout << "current:" << current_X  << "," << current_Y << endl;
+//            cout << "current:" << current_X  << "," << current_Y << endl;
 
             vector<Position> route;
             deque<Action> actions;
@@ -428,7 +428,8 @@ Agent::Action MyAI::getAction
                 //any safe tile which is not current tile or visited tile can be the goal tile
                 if (safe[i] != Position(current_X, current_Y) && KB[safe[i].first][safe[i].second].visited == false) {
                     goals.push_back(safe[i]);
-                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
+                    //debug
+//                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
                 }
             }
 
@@ -485,8 +486,8 @@ Agent::Action MyAI::getAction
             deque<Position> goals;
             deque<Position> allowed_tiles;
 
-
-            cout << "current:" << current_X  << "," << current_Y << endl;
+            //debug
+//            cout << "current:" << current_X  << "," << current_Y << endl;
 
             for (int i = 0; i < safe.size(); i++) {
                 //allowed tiles contain all safe tiles
@@ -496,7 +497,7 @@ Agent::Action MyAI::getAction
                     goals.push_back(safe[i]);
 
                     //debug
-                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
+//                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
                 }
             }
 
@@ -659,24 +660,24 @@ Agent::Action MyAI::getAction
 	current_time++;
 
     //debug
-    if(current_action == TURN_RIGHT){
-        cout<< "R";
-    }
-    if(current_action == TURN_LEFT){
-        cout<< "L";
-    }
-    if(current_action == FORWARD){
-        cout<< "F";
-    }
-    if(current_action == SHOOT){
-        cout<< "S";
-    }
-    if(current_action == GRAB){
-        cout<< "G";
-    }
-    if(current_action == CLIMB){
-        cout<< "C";
-    }
+//    if(current_action == TURN_RIGHT){
+//        cout<< "R";
+//    }
+//    if(current_action == TURN_LEFT){
+//        cout<< "L";
+//    }
+//    if(current_action == FORWARD){
+//        cout<< "F";
+//    }
+//    if(current_action == SHOOT){
+//        cout<< "S";
+//    }
+//    if(current_action == GRAB){
+//        cout<< "G";
+//    }
+//    if(current_action == CLIMB){
+//        cout<< "C";
+//    }
 
 
     //current_action
