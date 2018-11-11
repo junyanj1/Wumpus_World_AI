@@ -73,7 +73,9 @@ public:
 	int current_time = 0;
 	deque<Position> safe;
 	deque<Position> unsafe;
+    deque<deque<Position>> not_unsafe;
 
+    Position Wumpus;
 
     int bump_X = 10;
     int bump_Y = 10;
@@ -86,7 +88,6 @@ public:
 
     //store the expanded tiles of the selected tile
     map<Position,vector<Position>> tiles_expansion;
-    vector<Position> tiles_position;
     void store_tile_expansion(int current_X, int current_Y);
 
 
@@ -96,6 +97,8 @@ public:
 
 	//knowledge base
     vector<vector<Tile> > KB;
+
+    vector<vector<Position>> KB_;
 
 
 	//Tell() update KB after getting percepts

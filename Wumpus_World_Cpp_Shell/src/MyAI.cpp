@@ -35,18 +35,13 @@ void MyAI::update_percept(bool stench,bool breeze){
     Tile temp_tile;
     temp_tile.stench = stench;
     temp_tile.breeze = breeze;
-    //temp_tile.visited = true;
 
     //generate a new tile of current position
     //check x coordinate
-
     if(KB.size() < current_X+1){
         vector<Tile> t;
         t.push_back(temp_tile);
         KB.push_back(t);
-
-        //store current(X,Y)
-        tiles_position.push_back(Position(current_X,current_Y));
 
     }
     else if(KB[current_X].size()  < current_Y+1)   {
@@ -56,8 +51,6 @@ void MyAI::update_percept(bool stench,bool breeze){
         }
         KB[current_X].push_back(temp_tile);
 
-        //store current(X,Y)
-        tiles_position.push_back(Position(current_X,current_Y));
 
     }
     else{
@@ -65,6 +58,8 @@ void MyAI::update_percept(bool stench,bool breeze){
         KB[current_X][current_Y].breeze = breeze;
         KB[current_X][current_Y].stench = stench;
     }
+
+
 }
 
 
@@ -130,9 +125,9 @@ void MyAI::update_safe(){
 
 
     Tile temp_tile = KB[current_X][current_Y];
+
     //this tiles doesn't have breeze or stench, which means the other tiles around it are also safe
     if(!temp_tile.breeze && !temp_tile.stench){
-        //problem here
 
         //create left tile if can exist
         current_X--;
@@ -155,13 +150,73 @@ void MyAI::update_safe(){
             update_percept(true,true);
         //recover current x,y
         current_Y++;
-
-
         store_tile_expansion(current_X,current_Y);
+
+        deque<deque<Position>> new_not_unsafe;
         for(int i=0; i<tiles_expansion[temp_pos].size();++i){
-            if(find(safe.begin(),safe.end(),tiles_expansion[temp_pos][i]) == safe.end())
+            //avoid duplicates in safe, avoid put unsafe in safe
+            if(find(safe.begin(),safe.end(),tiles_expansion[temp_pos][i]) == safe.end() &&
+            find(unsafe.begin(),unsafe.end(),tiles_expansion[temp_pos][i]) == unsafe.end())
                 safe.push_back(tiles_expansion[temp_pos][i]);
+            //
+
+            //if there is safe position in not_unsafe, pop it
+            for(int j=0; j < not_unsafe.size(); ++j){
+                auto it = find(not_unsafe[j].begin(),not_unsafe[j].end(),tiles_expansion[temp_pos][i]);
+                if(it != not_unsafe[j].end() ){
+                    not_unsafe[j].erase(it);
+                }
+                //if there is a list of not_unsafe with size 1, it means the remaining one is unsafe
+                if(not_unsafe[j].size() == 1)
+                    unsafe.push_back(not_unsafe[j][0]);
+                else
+                    new_not_unsafe.push_back(not_unsafe[j]);
+            }
+
+            not_unsafe = new_not_unsafe;
+            new_not_unsafe.clear();
+
+
         }
+
+    }
+        //this tile has breeze or stench
+    else if(temp_tile.breeze || temp_tile.stench){
+
+        //create left tile if can exist
+        current_X--;
+        if(current_X >=0)
+            update_percept(true,true);
+        //create top tile if can exist
+        current_X++;
+        current_Y++;
+        if(current_Y < bump_Y)
+            update_percept(true, true);
+        //create right tile if can exist
+        current_Y--;
+        current_X++;
+        if(current_X < bump_X)
+            update_percept(true,true);
+        //create bottom tile if can exist
+        current_X--;
+        current_Y--;
+        if(current_Y >= 0)
+            update_percept(true,true);
+        //recover current x,y
+        current_Y++;
+        store_tile_expansion(current_X,current_Y);
+
+        //push tiles around into not_unsafe
+        deque<Position> temp;
+        for(int i=0; i<tiles_expansion[temp_pos].size();++i){
+            //check this tile is not already in safe
+            if(find(safe.begin(),safe.end(),tiles_expansion[temp_pos][i]) == safe.end())
+                temp.push_back(tiles_expansion[temp_pos][i]);
+        }
+        not_unsafe.push_back(temp);
+
+
+
     }
     else {
         //store all expandable tiles around the tile of current
@@ -388,25 +443,26 @@ Agent::Action MyAI::getAction
         else if (bump) {
             //erase current position(in the wall) from safe
 
-            //debug
-//            cout << "!!!!!!!!!!!!!!!";
+//            debug
+            cout << "!!!!!!!!!!!!!!!";
 
 
             deque<Position>::iterator it = find(safe.begin(), safe.end(), Position(current_X, current_Y));
-            safe.erase(it);
-            vector<pair<int,int>>::iterator _it = find(tiles_position.begin(),tiles_position.end(),Position(current_X, current_Y));
-            tiles_position.erase(_it);
-
+            if(it != safe.end()) {
+                safe.erase(it);
+                unsafe.push_back(Position(current_X, current_Y));
+                cout << "bump_pos: " << current_X << "," << current_Y << endl;
+            }
 
             //reverse position
             if (current_Dir == 0){
                 bump_X = current_X;
-                KB.pop_back();
+                //KB.pop_back();
                 current_X--;
             }
             if (current_Dir == 1) {
                 bump_Y = current_Y;
-                KB[current_X].pop_back();
+                //KB[current_X].pop_back();
                 current_Y--;
             }
             if (current_Dir == 2)
@@ -414,8 +470,10 @@ Agent::Action MyAI::getAction
             if (current_Dir == 3)
                 current_Y++;
 
+
+
             //debug
-//            cout << "current:" << current_X  << "," << current_Y << endl;
+            cout << "current:" << current_X  << "," << current_Y << endl;
 
             vector<Position> route;
             deque<Action> actions;
@@ -426,20 +484,21 @@ Agent::Action MyAI::getAction
                 //allowed tiles contain all safe tiles
                 allowed_tiles.push_back(safe[i]);
                 //any safe tile which is not current tile or visited tile can be the goal tile
-                if (safe[i] != Position(current_X, current_Y) && KB[safe[i].first][safe[i].second].visited == false) {
+                if (safe[i] != Position(current_X, current_Y) && !KB[safe[i].first][safe[i].second].visited) {
                     goals.push_back(safe[i]);
                     //debug
-//                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
+                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
                 }
             }
 
-
+            //go to any unvisited safe tiles
             if(!goals.empty()){
-                route = route_generator(pair<int, int>(current_X, current_Y), goals, allowed_tiles);
-                if(!route.empty())
+                route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
+                if(!route.empty()) {
                     actions = actions_generator(route);
-                if(!actions.empty())
-                    plan.insert(plan.cend(), actions.begin(), actions.end());
+                    if (!actions.empty())
+                        plan.insert(plan.cend(), actions.begin(), actions.end());
+                }
             }
                 //no goal tile, just go home
             else{
@@ -459,25 +518,60 @@ Agent::Action MyAI::getAction
 
 
         } else if (breeze || stench) {
-            //generate a sequence of actions to go back
             vector<Position> route;
             deque<Action> actions;
             deque<Position> allowed_tiles;
-
-            allowed_tiles = safe;
             deque<Position> goals;
 
 
-            goals.push_back(pair<int, int>(0, 0));
-            route = route_generator(pair<int, int>(current_X, current_Y), goals, allowed_tiles);
+            ///////////////////////minimal AI///////////////////
+//            allowed_tiles = safe;
+//            deque<Position> goals;
+//
+//
+//            goals.push_back(pair<int, int>(0, 0));
+//            route = route_generator(pair<int, int>(current_X, current_Y), goals, allowed_tiles);
+//
+//            if (!route.empty()) {
+//                actions = actions_generator(route);
+//                if (!actions.empty())
+//                    plan.insert(plan.cend(), actions.begin(), actions.end());
+//            }
+//
+//            plan.push_back(CLIMB);
+            ///////////////////////minimal AI///////////////////
 
-            if (!route.empty()) {
-                actions = actions_generator(route);
-                if (!actions.empty())
-                    plan.insert(plan.cend(), actions.begin(), actions.end());
+            for (int i = 0; i < safe.size(); i++) {
+                //allowed tiles contain all safe tiles
+                allowed_tiles.push_back(safe[i]);
+                //any safe tile which is not current tile or visited tile can be the goal tile
+                if (safe[i] != Position(current_X, current_Y) && !KB[safe[i].first][safe[i].second].visited) {
+                    goals.push_back(safe[i]);
+                }
             }
 
-            plan.push_back(CLIMB);
+            //if there are no unviisted safe tiles
+            if(goals.empty()){
+                //go back
+                goals.push_back(pair<int,int>(0,0));
+                route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
+                if(!route.empty()) {
+                    actions = actions_generator(route);
+                    if(!actions.empty())
+                        plan.insert(plan.cend(), actions.begin(), actions.end());
+                }
+                plan.push_back(CLIMB);
+            }
+                //go to any saft unvisited tiles
+            else{
+                route = route_generator(pair<int,int>(current_X,current_Y),goals,allowed_tiles);
+                if(!route.empty()) {
+                    actions = actions_generator(route);
+                    if(!actions.empty())
+                        plan.insert(plan.cend(), actions.begin(), actions.end());
+                }
+            }
+
 
         }
         else {
@@ -487,7 +581,7 @@ Agent::Action MyAI::getAction
             deque<Position> allowed_tiles;
 
             //debug
-//            cout << "current:" << current_X  << "," << current_Y << endl;
+            cout << "current:" << current_X  << "," << current_Y << endl;
 
             for (int i = 0; i < safe.size(); i++) {
                 //allowed tiles contain all safe tiles
@@ -497,7 +591,7 @@ Agent::Action MyAI::getAction
                     goals.push_back(safe[i]);
 
                     //debug
-//                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
+                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
                 }
             }
 
