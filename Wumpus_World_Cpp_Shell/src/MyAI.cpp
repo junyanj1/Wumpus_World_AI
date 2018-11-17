@@ -444,14 +444,14 @@ Agent::Action MyAI::getAction
             //erase current position(in the wall) from safe
 
 //            debug
-            cout << "!!!!!!!!!!!!!!!";
+//            cout << "!!!!!!!!!!!!!!!";
 
 
             deque<Position>::iterator it = find(safe.begin(), safe.end(), Position(current_X, current_Y));
             if(it != safe.end()) {
                 safe.erase(it);
                 unsafe.push_back(Position(current_X, current_Y));
-                cout << "bump_pos: " << current_X << "," << current_Y << endl;
+//                cout << "bump_pos: " << current_X << "," << current_Y << endl;
             }
 
             //reverse position
@@ -473,7 +473,7 @@ Agent::Action MyAI::getAction
 
 
             //debug
-            cout << "current:" << current_X  << "," << current_Y << endl;
+//            cout << "current:" << current_X  << "," << current_Y << endl;
 
             vector<Position> route;
             deque<Action> actions;
@@ -487,7 +487,7 @@ Agent::Action MyAI::getAction
                 if (safe[i] != Position(current_X, current_Y) && !KB[safe[i].first][safe[i].second].visited) {
                     goals.push_back(safe[i]);
                     //debug
-                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
+//                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
                 }
             }
 
@@ -581,7 +581,7 @@ Agent::Action MyAI::getAction
             deque<Position> allowed_tiles;
 
             //debug
-            cout << "current:" << current_X  << "," << current_Y << endl;
+//            cout << "current:" << current_X  << "," << current_Y << endl;
 
             for (int i = 0; i < safe.size(); i++) {
                 //allowed tiles contain all safe tiles
@@ -591,7 +591,7 @@ Agent::Action MyAI::getAction
                     goals.push_back(safe[i]);
 
                     //debug
-                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
+//                    cout<<"[" << safe[i].first << "," << safe[i].second <<"]" << endl;
                 }
             }
 
