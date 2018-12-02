@@ -73,7 +73,8 @@ public:
 	int current_time = 0;
 	deque<Position> safe;
 	deque<Position> unsafe;
-    deque<deque<Position>> not_unsafe;
+    map<Position,deque<Position>> not_unsafe;
+	map<Position,vector<Position>> possible_wumpus;
 
     Position Wumpus;
 
@@ -83,7 +84,7 @@ public:
     int current_Y = 0;
 	Action current_action;
     int current_Dir = 0;
-    bool have_arrow = true;
+    bool has_arrow = true;
     bool got_gold = false;
 
     //store the expanded tiles of the selected tile

@@ -152,68 +152,133 @@ void MyAI::update_safe(){
         current_Y++;
         store_tile_expansion(current_X,current_Y);
 
-        deque<deque<Position>> new_not_unsafe;
+        map<Position,deque<Position>> new_not_unsafe;
         for(int i=0; i<tiles_expansion[temp_pos].size();++i){
             //avoid duplicates in safe, avoid put unsafe in safe
             if(find(safe.begin(),safe.end(),tiles_expansion[temp_pos][i]) == safe.end() &&
             find(unsafe.begin(),unsafe.end(),tiles_expansion[temp_pos][i]) == unsafe.end())
                 safe.push_back(tiles_expansion[temp_pos][i]);
-            //
 
             //if there is safe position in not_unsafe, pop it
-            for(int j=0; j < not_unsafe.size(); ++j){
-                auto it = find(not_unsafe[j].begin(),not_unsafe[j].end(),tiles_expansion[temp_pos][i]);
-                if(it != not_unsafe[j].end() ){
-                    not_unsafe[j].erase(it);
+            //update not_unsafe
+            vector<Position> temp = tiles_expansion[temp_pos];
+
+            for(map<Position,deque<Position>>::iterator it = not_unsafe.begin(); it != not_unsafe.end();++it) {
+                for(int j = 0; j<temp.size();++j){
+                    deque<Position>::iterator it2 = find(it->second.begin(),it->second.end(),temp[j]);
+                    if(it2 != it->second.end())
+                        it->second.erase(it2);
                 }
-                //if there is a list of not_unsafe with size 1, it means the remaining one is unsafe
-                if(not_unsafe[j].size() == 1)
-                    unsafe.push_back(not_unsafe[j][0]);
+
+                //update unsafe
+                if(it->second.size() == 1){
+                    unsafe.push_back(it->second[0]);
+                }
                 else
-                    new_not_unsafe.push_back(not_unsafe[j]);
+                    new_not_unsafe[it->first] = it->second;
             }
 
             not_unsafe = new_not_unsafe;
             new_not_unsafe.clear();
 
-
         }
 
     }
         //this tile has breeze or stench
-    else if(temp_tile.breeze || temp_tile.stench){
+    else if(temp_tile.breeze || temp_tile.stench) {
 
         //create left tile if can exist
         current_X--;
-        if(current_X >=0)
-            update_percept(true,true);
+        if (current_X >= 0)
+            update_percept(true, true);
         //create top tile if can exist
         current_X++;
         current_Y++;
-        if(current_Y < bump_Y)
+        if (current_Y < bump_Y)
             update_percept(true, true);
         //create right tile if can exist
         current_Y--;
         current_X++;
-        if(current_X < bump_X)
-            update_percept(true,true);
+        if (current_X < bump_X)
+            update_percept(true, true);
         //create bottom tile if can exist
         current_X--;
         current_Y--;
-        if(current_Y >= 0)
-            update_percept(true,true);
+        if (current_Y >= 0)
+            update_percept(true, true);
         //recover current x,y
         current_Y++;
-        store_tile_expansion(current_X,current_Y);
+        store_tile_expansion(current_X, current_Y);
 
-        //push tiles around into not_unsafe
-        deque<Position> temp;
-        for(int i=0; i<tiles_expansion[temp_pos].size();++i){
-            //check this tile is not already in safe
-            if(find(safe.begin(),safe.end(),tiles_expansion[temp_pos][i]) == safe.end())
-                temp.push_back(tiles_expansion[temp_pos][i]);
+        if(temp_tile.stench){
+            vector<Position> stench_child = tiles_expansion[Position(current_X, current_Y)];
+            deque<Position> sc;
+            sc.insert(sc.begin(),stench_child.cbegin(),stench_child.cend());
+
+            if(possible_wumpus.size()==0){
+                possible_wumpus[Position(current_X,current_Y)] = stench_child;
+                not_unsafe[Position(current_X,current_Y)] = sc;
+            } else {
+                vector<Position> temp, temp2; //temp for not_unsafe, temp2 for safe
+                for(int i=0; i<sc.size();++i){
+                    for(int j = 0; j<possible_wumpus.begin()->second.size();++j){
+                        if (sc[i] == possible_wumpus.begin()->second[j])
+                            temp.push_back(sc[i]);
+                        else
+                            temp2.push_back(sc[i]);
+                    }
+                }
+                for()
+                possible_wumpus.begin()->second = temp;
+
+
+                // Update safe tiles when no breeze but stench
+                if(!temp_tile.breeze){
+                    //update safe
+                    for(int i = 0; i<temp2.size(); ++i){
+                        safe.push_back(temp2[i]);
+                    }
+                    //update not_unsafe
+                    map<Position,deque<Position>> new_not_unsafe;
+                    for(map<Position,deque<Position>>::iterator it = not_unsafe.begin(); it != not_unsafe.end();++it) {
+                        for(int j = 0; j<temp2.size();++j){
+                            deque<Position>::iterator it2 = find(it->second.begin(),it->second.end(),temp2[j]);
+                            if(it2 != it->second.end())
+                                it->second.erase(it2);
+                        }
+
+                        //update unsafe
+                        if(it->second.size() == 1){
+                            unsafe.push_back(it->second[0]);
+                        }
+                        else
+                            new_not_unsafe[it->first] = it->second;
+                    }
+
+                    not_unsafe = new_not_unsafe;
+                }
+            }
         }
-        not_unsafe.push_back(temp);
+        if (temp_tile.breeze) {
+            //push tiles around into not_unsafe
+            deque<Position> temp;
+            for (int i = 0; i < tiles_expansion[temp_pos].size(); ++i) {
+                //check this tile is not already in safe
+                if (find(safe.begin(), safe.end(), tiles_expansion[temp_pos][i]) == safe.end())
+                    temp.push_back(tiles_expansion[temp_pos][i]);
+            }
+            deque<Position> current = not_unsafe[Position(current_X,current_Y)];
+            if(not_unsafe.count(Position(current_X,current_Y))){
+                for(int i; i<temp.size();++i){
+                    if(find(not_unsafe[Position(current_X,current_Y)].begin(),not_unsafe[Position(current_X,current_Y)].end(),temp[i]) == not_unsafe[Position(current_X,current_Y)].end())
+                        not_unsafe[Position(current_X,current_Y)].push_back(temp[i]);
+                }
+            }
+            else{
+                not_unsafe[Position(current_X,current_Y)] = temp;
+            }
+        }
+
 
 
 
@@ -254,7 +319,7 @@ void MyAI::update_action(Agent::Action current_action,int time){
                 current_Dir = 3;
             break;
         case Agent:: SHOOT:
-            have_arrow = false;
+            has_arrow = false;
             break;
         case Agent:: GRAB:
             got_gold = true;
@@ -518,6 +583,7 @@ Agent::Action MyAI::getAction
 
 
         } else if (breeze || stench) {
+
             vector<Position> route;
             deque<Action> actions;
             deque<Position> allowed_tiles;
@@ -574,6 +640,12 @@ Agent::Action MyAI::getAction
 
 
         }
+
+        //try to shoot wumpus
+//        else if(has_arrow){
+//
+//        }
+
         else {
             vector<Position> route;
             deque<Action> actions;
