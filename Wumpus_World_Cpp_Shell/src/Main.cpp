@@ -207,6 +207,9 @@ int main ( int argc, char *argv[] )
 				break;
 			}
 
+            //debug
+            cout<<"score:" << score << endl;
+
 			numOfScores += 1;
 			sumOfScores += score;
 			sumOfScoresSquared += score*score;

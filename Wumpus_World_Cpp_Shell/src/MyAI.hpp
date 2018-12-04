@@ -73,8 +73,8 @@ public:
 	int current_time = 0;
 	deque<Position> safe;
 	deque<Position> unsafe;
-    map<Position,deque<Position>> not_unsafe;
-	map<Position,vector<Position>> possible_wumpus;
+    deque<deque<Position>> not_unsafe;
+	vector<Position> possible_wumpus;
 
     Position Wumpus;
 
@@ -86,6 +86,7 @@ public:
     int current_Dir = 0;
     bool has_arrow = true;
     bool got_gold = false;
+    bool wumpus_dead = false;
 
     //store the expanded tiles of the selected tile
     map<Position,vector<Position>> tiles_expansion;
@@ -104,7 +105,7 @@ public:
 
 	//Tell() update KB after getting percepts
 	void update_percept(bool stench,bool breeze);
-	void update_safe();
+	void update_safe(bool stench,bool breeze);
 	void update_action(Action current_action, int t);
 
 	//query KB for certain information
@@ -113,6 +114,7 @@ public:
 	//generate an action sequence
 	vector<Position> route_generator(Position current,deque<Position> goals, deque<Position> allowed_tiles );
     deque<Action> actions_generator(vector<Position> route);
+    deque<Agent::Action> shoot_wumpus();
 
 
 
